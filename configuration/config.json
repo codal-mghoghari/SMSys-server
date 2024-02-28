@@ -1,0 +1,21 @@
+{
+  "useDev": true,
+  "development": {
+    "host": "localhost",
+    "username": "postgres",
+    "password": "123",
+    "database": "db_dev",
+    "port": 5432,
+    "dialect": "postgres"
+  },
+  "production": {
+    "host": "127.0.0.1",
+    "username": "root",
+    "password": null,
+    "database": "db_prod",
+    "dialect": "postgres"
+  },
+  "env": {
+    "use_env_variable": false
+  }
+}
