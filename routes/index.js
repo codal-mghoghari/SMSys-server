@@ -20,55 +20,78 @@ module.exports = (app) => {
     app.post("/api/logout", AuthController.logout);
     app.post("/api/signup", AuthController.signup);
 
-    //
-    // app.get("/api/*/:id", [verifyJWT, verifyAdmin], async (req, res, next) => {
-    //     const url = req.url.split("/");
-    //     const rootPath = path.join(__dirname, "../");
-    //     const controllerName = url[2] + "controller.js";
-    //     const controllerObject = require(rootPath +
-    //         "controllers/" +
-    //         controllerName);
-    //     return await controllerObject.readItem(req, res, next);
-    // });
-    //
-    // app.get("/api/*", [verifyJWT], async (req, res, next) => {
-    //     let url = req.url.substring(0, req.url.indexOf("?")).split("/");
-    //     url = url != "" ? url : req.url.split("/");
-    //     const rootPath = path.join(__dirname, "../");
-    //     const controllerName = url[2] + "controller.js";
-    //     const controllerObject = require(rootPath +
-    //         "controllers/" +
-    //         controllerName);
-    //     return await controllerObject.listItem(req, res, next);
-    // });
-    //
-    // app.post("/api/*", [verifyJWT], async (req, res, next) => {
-    //     const url = req.url.split("/");
-    //     const rootPath = path.join(__dirname, "../");
-    //     const controllerName = url[2] + "controller.js";
-    //     const controllerObject = require(rootPath +
-    //         "controllers/" +
-    //         controllerName);
-    //     return await controllerObject.createItem(req, res, next);
-    // });
-    //
-    // app.put("/api/*/:id", [verifyJWT], async (req, res, next) => {
-    //     const url = req.url.split("/");
-    //     const rootPath = path.join(__dirname, "../");
-    //     const controllerName = url[2] + "controller.js";
-    //     const controllerObject = require(rootPath +
-    //         "controllers/" +
-    //         controllerName);
-    //     return await controllerObject.updateItem(req, res, next);
-    // });
-    //
-    // app.delete("/api/*/:id", [verifyJWT], async (req, res, next) => {
-    //     const url = req.url.split("/");
-    //     const rootPath = path.join(__dirname, "../");
-    //     const controllerName = url[2] + "controller.js";
-    //     const controllerObject = require(rootPath +
-    //         "controllers/" +
-    //         controllerName);
-    //     return await controllerObject.deleteItem(req, res, next);
-    // });
+
+    app.get("/api/*/:id", [verifyJWT, verifyAdmin], async (req, res, next) => {
+        try {
+            const url = req.url.split("/");
+            const rootPath = path.join(__dirname, "../");
+            const controllerName = url[2] + "Controller.js";
+            const controllerObject = require(rootPath +
+                "controllers/" +
+                controllerName);
+            return await controllerObject.getItem(req, res, next);
+        } catch (err) {
+            res.status(500).json({error: err});
+        }
+    });
+
+    app.get("/api/*", [verifyJWT], async (req, res, next) => {
+        try {
+            const url = req.url.split("/");
+            const rootPath = path.join(__dirname, "../");
+            const controllerName = url[2] + "Controller.js";
+            const controllerObject = require(rootPath +
+                "controllers/" +
+                controllerName);
+            return await controllerObject.listItems(req, res, next);
+        } catch (err) {
+            res.status(500).json({error: err});
+        }
+
+    });
+
+    app.post("/api/*", [verifyJWT], async (req, res, next) => {
+        try {
+            const url = req.url.split("/");
+            const rootPath = path.join(__dirname, "../");
+            const controllerName = url[2] + "Controller.js";
+            const controllerObject = require(rootPath +
+                "controllers/" +
+                controllerName);
+            return await controllerObject.createItem(req, res, next);
+        } catch (err) {
+            res.status(500).json({error: err});
+        }
+
+    });
+
+    app.put("/api/*/:id", [verifyJWT], async (req, res, next) => {
+        try {
+            const url = req.url.split("/");
+            const rootPath = path.join(__dirname, "../");
+            const controllerName = url[2] + "Controller.js";
+            const controllerObject = require(rootPath +
+                "controllers/" +
+                controllerName);
+            return await controllerObject.updateItem(req, res, next);
+        } catch (err) {
+            res.status(500).json({error: err});
+        }
+
+    });
+
+    app.delete("/api/*/:id", [verifyJWT], async (req, res, next) => {
+        try {
+            const url = req.url.split("/");
+            const rootPath = path.join(__dirname, "../");
+            const controllerName = url[2] + "Controller.js";
+            const controllerObject = require(rootPath +
+                "controllers/" +
+                controllerName);
+            return await controllerObject.deleteItem(req, res, next);
+        } catch (err) {
+            res.status(500).json({error: err});
+        }
+
+    });
 };

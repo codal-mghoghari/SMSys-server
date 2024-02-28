@@ -1,3 +1,5 @@
+const db = require("../models/index");
+
 function verifyAdmin(req, res, next) {
     try {
         const ADMIN_ROLE = 0;

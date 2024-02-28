@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const {updateData} = require("../util/CommonUtil");
 
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
@@ -50,21 +51,24 @@ module.exports = (sequelize, DataTypes) => {
             return rules;
         };
 
-        // prepareUpdateData = async (newData, defaultData) => {
-        //     let data = {};
-        //     data["first_name"] = await arrayGet(
-        //         "first_name",
-        //         newData,
-        //         defaultData["first_name"]
-        //     );
-        //     data["last_name"] = await arrayGet(
-        //         "last_name",
-        //         newData,
-        //         defaultData["last_name"]
-        //     );
-        //
-        //     return data;
-        // };
+        prepareUpdateData = async (newData, defaultData) => {
+            let data = {};
+            for (const item of Object.keys(newData)) {
+                data[item] = await updateData(item, newData, defaultData);
+            }
+            // data["first_name"] = await updateData(
+            //     "first_name",
+            //     newData,
+            //     defaultData["first_name"]
+            // );
+            // data["last_name"] = await updateData(
+            //     "last_name",
+            //     newData,
+            //     defaultData["last_name"]
+            // );
+
+            return data;
+        };
     }
 
     User.init(
