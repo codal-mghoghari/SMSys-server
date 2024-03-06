@@ -221,17 +221,21 @@ exports.updateItem = async (req, res, next) => {
         const id = req.params.id;
         const data = req.body;
         const user = new Model.Users();
-        const {validationRule, customMessage} = await user.validationRequest(
+        let {validationRule, customMessage} = await user.validationRequest(
             "update"
         );
         const validation = new Validator(data, validationRule, customMessage);
-        if (validation.fails()) {
-            return next(
-                new ValidationError(
-                    JSON.parse(JSON.stringify(validation.errors)).errors
-                )
-            );
+        if (!data.optedCourses) {
+            if (validation.fails()) {
+                return next(
+                    new ValidationError(
+                        JSON.parse(JSON.stringify(validation.errors)).errors
+                    )
+                );
+            }
         }
+
+
         const isUser = await Model.Users.findOne({
             where: {
                 id: id,
@@ -243,7 +247,7 @@ exports.updateItem = async (req, res, next) => {
         }
         let updatedData = await user.prepareUpdateData(data, isUser);
         const userUpdate = await isUser.update(updatedData);
-        return res.status(200).json({data: userUpdate, message: "Item Updated."});
+        return res.status(200).json({data: userUpdate, message: "Saved Changes!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }

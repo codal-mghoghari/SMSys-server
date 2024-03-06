@@ -34,7 +34,10 @@ const util = require("../util/CommonUtil");
  *     User:
  *       type: object
  *       properties:
- *         name:
+ *         first_name:
+ *           type: string
+ *           description: The username
+ *         last_name:
  *           type: string
  *           description: The username
  *         email:
@@ -158,9 +161,9 @@ module.exports.login = async (req, res, next) => {
             };
             return res
                 .status(200)
-                .json({data: response, message: "Logged in success"});
+                .json({data: response, message: "Logged in successfully!"});
         }
-        return res.status(404).json({message: "Email Id/Password is wrong"});
+        return res.status(404).json({message: "Email Id/Password is incorrect!"});
     } catch (e) {
         return res.status(500).json({message: e.message});
     }

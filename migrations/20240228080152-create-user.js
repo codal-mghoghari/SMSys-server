@@ -49,6 +49,11 @@ module.exports = {
                 defaultValue: Sequelize.DataTypes.NOW,
                 onUpdate: Sequelize.DataTypes.NOW,
             },
+            optedCourses: {
+                type: Sequelize.STRING,
+                allowNull: true,
+                defaultValue: "none",
+            }
         });
     },
 

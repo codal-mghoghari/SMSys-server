@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
         validationRequest = async (action) => {
-            let rules = {};
+            let rules;
             switch (action) {
                 case "create":
                     rules = {
@@ -42,6 +42,7 @@ module.exports = (sequelize, DataTypes) => {
                         customMessage: {
                             "required.first_name": "First Name is required",
                             "required.last_name": "Last Name is required",
+                            "required.optedCourses": "optedCourses is required",
                         },
                     };
                     break;
@@ -56,17 +57,6 @@ module.exports = (sequelize, DataTypes) => {
             for (const item of Object.keys(newData)) {
                 data[item] = await updateData(item, newData, defaultData);
             }
-            // data["first_name"] = await updateData(
-            //     "first_name",
-            //     newData,
-            //     defaultData["first_name"]
-            // );
-            // data["last_name"] = await updateData(
-            //     "last_name",
-            //     newData,
-            //     defaultData["last_name"]
-            // );
-
             return data;
         };
     }
@@ -80,6 +70,7 @@ module.exports = (sequelize, DataTypes) => {
             date_of_birth: DataTypes.STRING,
             role: DataTypes.INTEGER,
             is_deleted: DataTypes.INTEGER,
+            optedCourses: DataTypes.STRING,
             full_name: {
                 type: DataTypes.VIRTUAL,
                 get() {
