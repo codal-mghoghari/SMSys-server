@@ -20,6 +20,7 @@ if (config.env.use_env_variable) {
             {
                 dialect: config.development.dialect,
                 port: config.development.port,
+                logging: console.log,
                 define: {
                     freezeTableName: true
                 },

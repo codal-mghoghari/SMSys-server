@@ -71,6 +71,7 @@ module.exports = (sequelize, DataTypes) => {
             role: DataTypes.INTEGER,
             is_deleted: DataTypes.INTEGER,
             optedCourses: DataTypes.STRING,
+            entryTest: DataTypes.BOOLEAN,
             full_name: {
                 type: DataTypes.VIRTUAL,
                 get() {

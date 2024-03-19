@@ -4,11 +4,11 @@
     "info": {
       "version": "1.0.0",
       "title": "Swagger api for user management service",
-      "description": "User management API",
+      "description": "Management API",
       "termsOfService": "http://localhost:3000/terms/",
       "contact": {
-        "name": "Het Rachh",
-        "email": "hrachh@codal.com",
+        "name": "Margav Ghoghari",
+        "email": "mghoghari@codal.com",
         "url": "https://www.codal.com/"
       },
       "license": {
