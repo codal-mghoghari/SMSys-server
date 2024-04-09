@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
+            User.belongsToMany(models.Courses, {
+                through: 'OptedCourses',
+                as: 'course',
+                foreignKey: 'courseId',
+            })
         }
         validationRequest = async (action) => {
             let rules;
@@ -70,8 +75,7 @@ module.exports = (sequelize, DataTypes) => {
             date_of_birth: DataTypes.STRING,
             role: DataTypes.INTEGER,
             is_deleted: DataTypes.INTEGER,
-            optedCourses: DataTypes.STRING,
-            entryTest: DataTypes.BOOLEAN,
+            entry_test: DataTypes.INTEGER,
             full_name: {
                 type: DataTypes.VIRTUAL,
                 get() {

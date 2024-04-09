@@ -246,7 +246,7 @@ exports.updateItem = async (req, res, next) => {
             return res.status(404).json({message: "User not found"});
         }
         let updatedData = await user.prepareUpdateData(data, isUser);
-        console.log(updatedData)
+        console.log("updatedData", updatedData)
         const userUpdate = await isUser.update(updatedData);
         return res.status(200).json({data: userUpdate, message: "Saved Changes!"});
     } catch (e) {

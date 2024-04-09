@@ -12,7 +12,7 @@ let sequelize;
 if (config.env.use_env_variable) {
     sequelize = new Sequelize.Sequelize(process.env[config.env.use_env_variable], config);
 } else {
-    if(config.useDev){
+    if (config.useDev) {
         sequelize = new Sequelize.Sequelize(
             config.development.database,
             config.development.username,
@@ -21,6 +21,7 @@ if (config.env.use_env_variable) {
                 dialect: config.development.dialect,
                 port: config.development.port,
                 logging: console.log,
+                sync: true,
                 define: {
                     freezeTableName: true
                 },
@@ -32,12 +33,21 @@ if (config.env.use_env_variable) {
             config.production.username,
             config.production.password,
             {
+                sync: true,
                 dialect: config.production.dialect,
                 port: config.production.port
             }
         );
     }
 }
+
+if (config.useDev) {
+    (async () => {
+        // This will sync the tables if they are not created or their attributes are changed..
+        await sequelize.sync(({alter: true}));
+    })();
+}
+
 
 fs.readdirSync(__dirname)
     .filter((file) => {
