@@ -13,7 +13,7 @@ const app = express();
 
 const corsOptions = {
     credentials: true,
-    origin: ['*'] // Whitelist the domains you want to allow
+    origin: ['*', 'http://localhost:3000', "http://localhost:8000"] // Whitelist the domains you want to allow
 };
 
 app.use(logger('dev'));

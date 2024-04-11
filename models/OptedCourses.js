@@ -18,24 +18,36 @@ module.exports = (sequelize, DataTypes) => {
                 case "create":
                     rules = {
                         validationRule: {
-                            optedCourseID: "required",
-                            userID: "required",
+                            courseId: "required",
+                            userId: "required",
                         },
                         customMessage: {
                             "required.optedCourseID": "optedCourseID is required",
-                            "required.userID": "userID is required",
+                            "required.userId": "userID is required",
                         },
                     };
                     break;
                 case "update":
                     rules = {
                         validationRule: {
-                            optedCourseID: "required",
-                            userID: "required",
+                            courseId: "required",
+                            userId: "required",
                         },
                         customMessage: {
                             "required.optedCourseID": "optedCourseID is required",
-                            "required.userID": "userID is required",
+                            "required.userId": "userID is required",
+                        },
+                    };
+                    break;
+                case "delete":
+                    rules = {
+                        validationRule: {
+                            courseId: "required",
+                            userId: "required",
+                        },
+                        customMessage: {
+                            "required.optedCourseID": "optedCourseID is required",
+                            "required.userId": "userID is required",
                         },
                     };
                     break;

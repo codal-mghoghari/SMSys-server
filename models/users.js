@@ -14,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
             User.belongsToMany(models.Courses, {
                 through: 'OptedCourses',
                 as: 'course',
-                foreignKey: 'courseId',
+                foreignKey: 'userId',
+                onDelete: 'CASCADE',
             })
         }
         validationRequest = async (action) => {

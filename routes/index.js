@@ -50,6 +50,21 @@ module.exports = (app) => {
 
     });
 
+    app.post("/api/*/:id", [verifyJWT], async (req, res, next) => {
+        try {
+            const url = req.url.split("/");
+            const rootPath = path.join(__dirname, "../");
+            const controllerName = url[2] + "Controller.js";
+            const controllerObject = require(rootPath +
+                "controllers/" +
+                controllerName);
+            return await controllerObject.createItem(req, res, next);
+        } catch (err) {
+            res.status(500).json({error: err});
+        }
+
+    });
+
     app.post("/api/*", [verifyJWT], async (req, res, next) => {
         try {
             const url = req.url.split("/");

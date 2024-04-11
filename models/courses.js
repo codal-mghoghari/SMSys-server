@@ -14,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
             Courses.belongsToMany(models.Users, {
                 through: 'OptedCourses',
                 as: 'user',
-                foreignKey: 'userId',
+                foreignKey: 'courseId',
+                onDelete: 'CASCADE',
             })
         }
         validationRequest = async (action) => {
@@ -57,7 +58,6 @@ module.exports = (sequelize, DataTypes) => {
 
     Courses.init(
         {
-            cid: DataTypes.INTEGER,
             course: DataTypes.STRING,
         },
         {
