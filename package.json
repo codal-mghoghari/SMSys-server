@@ -21,6 +21,7 @@
     "sequelize": "^6.37.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.0",
+    "uuid": "^9.0.1",
     "validatorjs": "^3.22.1"
   },
   "devDependencies": {

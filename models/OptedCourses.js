@@ -71,11 +71,11 @@ module.exports = (sequelize, DataTypes) => {
             id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
-                autoIncrement: true,
                 allowNull: false,
+                autoIncrement: true,
             },
             courseId: {
-                type: DataTypes.INTEGER,
+                type: DataTypes.UUID,
                 references: {
                     model: "Courses",
                     key: 'id'

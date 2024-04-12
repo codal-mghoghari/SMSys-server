@@ -1,5 +1,5 @@
 "use strict";
-const { Model } = require("sequelize");
+const { Model, Sequelize} = require("sequelize");
 const {updateData} = require("../util/CommonUtil");
 
 module.exports = (sequelize, DataTypes) => {
@@ -58,6 +58,12 @@ module.exports = (sequelize, DataTypes) => {
 
     Courses.init(
         {
+            id: {
+                type: DataTypes.UUID,
+                primaryKey: true,
+                allowNull: false,
+                defaultValue: DataTypes.UUIDV4,
+            },
             course: DataTypes.STRING,
         },
         {

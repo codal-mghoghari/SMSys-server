@@ -4,35 +4,34 @@ const ValidationError = require("../handler/error/ValidationError");
 const bcrypt = require("bcrypt");
 require("dotenv/config");
 const {getPaginated, pagination} = require("../util/CommonUtil");
-
 /**
  * @swagger
  * tags:
- *   name: OptCourse
- *   description: The Opted Course managing API
+ *   name: Course
+ *   description: The Course managing API
  */
 
 /**
  * @openapi
  * components:
  *   schemas:
- *     OptCourse:
+ *     Course:
  *       type: object
  *       properties:
- *         courseId:
- *           type: integer
- *           description: The course id
- *         userId:
- *           type: integer
- *           description: The user id
+ *         id:
+ *           type: UUID
+ *           description: The course uuid
+ *         course:
+ *           type: string
+ *           description: The course name
  */
 
 /**
  * @openapi
- * /optcourse:
+ * /course:
  *   post:
  *     summary: Create a new User's Opted Course
- *     tags: [OptCourse]
+ *     tags: [Course]
  *     parameters:
  *       - in: path
  *         name: id
@@ -58,22 +57,22 @@ const {getPaginated, pagination} = require("../util/CommonUtil");
  *       500:
  *         description: Some server error
  */
+// TODO()
 exports.createItem = async (req, res, next) => {
     try {
-        const userId = req.params.id;
         const reqBody = req.body
-        let data = {...reqBody, userId}
-        const courseModel = new Model.OptedCourses();
+        let data = {...reqBody}
+        const courseModel = new Model.Courses();
         const {validationRule, customMessage} = await courseModel.validationRequest(
             "create"
         );
-        const allCoursesData = await Model.OptedCourses.findAll({
+        const allCoursesData = await Model.Courses.findAll({
             where: {userId: userId},
         })
         // If already existing data, it shall not re-add same data.
-        const isExist = !!allCoursesData.find((value) => data.userId.toString() === value.dataValues.userId.toString() && data.courseId.toString() === value.dataValues.courseId.toString());
+        const isExist = !!allCoursesData.find((value) => data.course.toString() === value.dataValues.course.toString());
         if (allCoursesData.length > 0 && isExist) {
-            return res.status(200).json({status: "ERROR", message: "User with that Course already existing!"});
+            return res.status(400).json({status: "ERROR", message: "Course already existing!"});
         }
         const validation = new Validator(data, validationRule, customMessage);
         if (validation.fails()) {
@@ -83,8 +82,8 @@ exports.createItem = async (req, res, next) => {
                 )
             );
         }
-        let response = await Model.OptedCourses.create(data);
-        return res.status(200).json({status: "SUCCESS", data: response, message: "Course created successfully"});
+        let response = await Model.Courses.create(data);
+        return res.status(200).json({data: response, message: "Course created successfully"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -92,10 +91,10 @@ exports.createItem = async (req, res, next) => {
 
 /**
  * @openapi
- * /optcourse:
+ * /course:
  *   get:
  *     summary: Returns the list of all the Opted Courses
- *     tags: [OptCourse]
+ *     tags: [Course]
  *     security:
  *       - jwt: []
  *     parameters:
@@ -132,13 +131,13 @@ exports.listItems = async (req, res, next) => {
         const {page, size, search, sortBy, sortKey} = req.query;
         const {limit, offset} = await getPaginated(size, page);
         const order = [[sortKey ? sortKey : "id", sortBy ? sortBy : "DESC"]];
-        const data = await Model.OptedCourses.findAndCountAll({
+        const data = await Model.Courses.findAndCountAll({
             limit: limit,
             offset: offset,
             order: order,
         });
         let response = await pagination(data, page, limit);
-        return res.status(200).json({status: "SUCCESS", data: response, message: "All courses listed"});
+        return res.status(200).json({data: response, message: "All courses listed"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -146,10 +145,10 @@ exports.listItems = async (req, res, next) => {
 
 /**
  * @openapi
- * /optcourse/:
+ * /course/:
  *   get:
- *     summary: Get the courses by user ID
- *     tags: [OptCourse]
+ *     summary: Get the courses by name
+ *     tags: [Course]
  *     requestBody:
  *       required: true
  *       content:
@@ -174,19 +173,15 @@ exports.getItem = async (req, res, next) => {
     try {
         const data = req.body;
         const courseModel = new Model.Courses();
-        const courseResponse = await Model.OptedCourses.findAll({
-            where: {userId: data.userId},
-            include: [{
-                model: courseModel,
-                where: {courseId: data.courseId},
-            }]
+        const courseResponse = await Model.Courses.findAll({
+            where: {course: data.course}
         })
         if (!courseResponse) {
             return res
                 .status(404)
                 .json({status: "ERROR", message: "Course not found."});
         }
-        return res.status(200).json({status: "SUCCESS", data: courseResponse, message: "Course Found!"});
+        return res.status(200).json({data: courseResponse, message: "Course Found!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -194,10 +189,10 @@ exports.getItem = async (req, res, next) => {
 
 /**
  * @swagger
- * /optcourse/{id}:
+ * /course/{id}:
  *  put:
  *    summary: Update the course by the userid
- *    tags: [OptCourse]
+ *    tags: [Course]
  *    parameters:
  *      - in: path
  *        name: id
@@ -220,8 +215,8 @@ exports.getItem = async (req, res, next) => {
 
 exports.updateItem = async (req, res, next) => {
     try {
-        const id = req.params.id;
-        const optedCourses = new Model.OptedCourses();
+        const courseName = req.body
+        const optedCourses = new Model.Courses();
         let {validationRule, customMessage} = await optedCourses.validationRequest(
             "update"
         );
@@ -234,9 +229,9 @@ exports.updateItem = async (req, res, next) => {
             );
         }
 
-        const isCourse = await Model.OptedCourses.findOne({
+        const isCourse = await Model.Courses.findOne({
             where: {
-                userId: id,
+                course: courseName,
             },
         });
         if (!isCourse) {
@@ -245,7 +240,7 @@ exports.updateItem = async (req, res, next) => {
         let updatedData = await optedCourses.prepareUpdateData(data, isCourse);
         console.log("updatedData: ", updatedData)
         const userUpdate = await isCourse.update(updatedData);
-        return res.status(200).json({status: "SUCCESS", data: userUpdate, message: "Saved Changes!"});
+        return res.status(200).json({data: userUpdate, message: "Saved Changes!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -253,10 +248,10 @@ exports.updateItem = async (req, res, next) => {
 
 /**
  * @swagger
- * /optcourse/{id}:
+ * /course/{id}:
  *   delete:
  *     summary: Remove the user by id
- *     tags: [OptCourse]
+ *     tags: [Course]
  *     parameters:
  *       - in: path
  *         name: id
@@ -290,7 +285,7 @@ exports.deleteItem = async (req, res, next) => {
                 .json({status: "ERROR", message: "Course not found."});
         }
         await course.destroy();
-        return res.status(200).json({status: "SUCCESS", message: "UnOpted Course successfully"});
+        return res.status(200).json({message: "Item deleted."});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }

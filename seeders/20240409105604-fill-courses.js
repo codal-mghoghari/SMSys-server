@@ -1,41 +1,43 @@
 'use strict';
 
+const { v4: uuid } = require('uuid');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     let seedCourses = [
       {
-        cid: 1,
+        id: uuid(),
         course: "Javascript",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        cid: 2,
+        id: uuid(),
         course: "Typescript",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        cid: 3,
+        id: uuid(),
         course: "cSharp",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        cid: 4,
+        id: uuid(),
         course: "Java",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        cid: 5,
+        id: uuid(),
         course: "Python",
         createdAt: new Date(),
         updatedAt: new Date(),
       },
       {
-        cid: 6,
+        id: uuid(),
         course: "Rust",
         createdAt: new Date(),
         updatedAt: new Date(),
