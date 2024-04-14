@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
+            OptedCourses.belongsTo(models.Courses, {
+                through: 'Courses',
+                foreignKey: 'courseId',
+                onDelete: 'CASCADE',
+            })
         }
         validationRequest = async (action) => {
             let rules;

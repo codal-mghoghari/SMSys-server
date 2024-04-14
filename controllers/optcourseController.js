@@ -136,8 +136,15 @@ exports.listItems = async (req, res, next) => {
             limit: limit,
             offset: offset,
             order: order,
+            include: [{
+                model: Model.Courses,
+                required: false,
+                attributes: ['course', 'id']
+            }],
+            attributes: []
         });
-        let response = await pagination(data, page, limit);
+        let paginatedResponse = await pagination(data, page, limit);
+        let response = paginatedResponse.results.map(value => value.Course)
         return res.status(200).json({status: "SUCCESS", data: response, message: "All courses listed"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
@@ -146,16 +153,17 @@ exports.listItems = async (req, res, next) => {
 
 /**
  * @openapi
- * /optcourse/:
+ * /optcourse/{id}:
  *   get:
  *     summary: Get the courses by user ID
  *     tags: [OptCourse]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user id
  *     security:
  *       - jwt: []
  *     responses:
@@ -172,13 +180,26 @@ exports.listItems = async (req, res, next) => {
  */
 exports.getItem = async (req, res, next) => {
     try {
-        const data = req.body;
-        const courseModel = new Model.Courses();
+        const id = req.params.id;
+        const courseIds = await Model.OptedCourses.findAll({
+            raw: true,
+            where: {userId: id},
+        }).then(response => {
+            return response.map(value => value.courseId)
+        })
+        if (courseIds.length === 0) {
+            return res
+                .status(404)
+                .json({status: "ERROR", message: "Opted Courses not found."});
+        }
         const courseResponse = await Model.OptedCourses.findAll({
-            where: {userId: data.userId},
+            where: {userId: id},
+            attributes: [],
             include: [{
-                model: courseModel,
-                where: {courseId: data.courseId},
+                model: Model.Courses,
+                required: false,
+                attributes: ['course', 'id'],
+                where: {id: courseIds},
             }]
         })
         if (!courseResponse) {
@@ -186,7 +207,8 @@ exports.getItem = async (req, res, next) => {
                 .status(404)
                 .json({status: "ERROR", message: "Course not found."});
         }
-        return res.status(200).json({status: "SUCCESS", data: courseResponse, message: "Course Found!"});
+        let coursesList = courseResponse.map(value => value.dataValues.Course)
+        return res.status(200).json({status: "SUCCESS", data: coursesList, message: "Course Found!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -218,6 +240,7 @@ exports.getItem = async (req, res, next) => {
  *        description: Some error happened
  */
 
+// TODO()
 exports.updateItem = async (req, res, next) => {
     try {
         const id = req.params.id;
