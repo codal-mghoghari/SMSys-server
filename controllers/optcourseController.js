@@ -84,7 +84,7 @@ exports.createItem = async (req, res, next) => {
             );
         }
         let response = await Model.OptedCourses.create(data);
-        return res.status(200).json({status: "SUCCESS", data: response, message: "Course created successfully"});
+        return res.status(200).json({status: "SUCCESS", data: response, message: "Course opted successfully"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }

@@ -225,7 +225,7 @@ exports.updateItem = async (req, res, next) => {
             "update"
         );
         const validation = new Validator(data, validationRule, customMessage);
-        if (data.optedCourses === {} || typeof data.entryTest !== typeof true) {
+        if (typeof data.entry_test !== typeof true) {
             if (validation.fails()) {
                 return next(
                     new ValidationError(
@@ -234,7 +234,6 @@ exports.updateItem = async (req, res, next) => {
                 );
             }
         }
-
 
         const isUser = await Model.Users.findOne({
             where: {
@@ -246,6 +245,9 @@ exports.updateItem = async (req, res, next) => {
             return res.status(404).json({message: "User not found"});
         }
         let updatedData = await user.prepareUpdateData(data, isUser);
+        if(updatedData.entry_test === true){
+            updatedData.entry_test = 1;
+        }
         console.log("updatedData", updatedData)
         const userUpdate = await isUser.update(updatedData);
         return res.status(200).json({data: userUpdate, message: "Saved Changes!"});
