@@ -3,7 +3,7 @@ const Validator = require("validatorjs");
 const ValidationError = require("../handler/error/ValidationError");
 const bcrypt = require("bcrypt");
 require("dotenv/config");
-const {getPaginated, pagination} = require("../util/CommonUtil");
+const {getPaginated, pagination} = require("../util/util");
 
 /**
  * @swagger

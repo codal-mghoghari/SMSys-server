@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const Validator = require("validatorjs");
 require("dotenv/config");
-const util = require("../util/CommonUtil");
+const util = require("../util/util");
 
 /**
  * @swagger

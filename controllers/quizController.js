@@ -4,34 +4,36 @@ const ValidationError = require("../handler/error/ValidationError");
 const bcrypt = require("bcrypt");
 require("dotenv/config");
 const {getPaginated, pagination} = require("../util/util");
+const e = require("express");
+
 /**
  * @swagger
  * tags:
- *   name: Course
- *   description: The Course managing API
+ *   name: Quiz
+ *   description: The Quiz managing API
  */
 
 /**
  * @openapi
  * components:
  *   schemas:
- *     Course:
+ *     Quiz:
  *       type: object
  *       properties:
  *         id:
- *           type: UUID
- *           description: The course uuid
- *         course:
- *           type: string
- *           description: The course name
+ *           type: integer
+ *           description: The row id
+ *         question_id:
+ *           type: integer
+ *           description: The question id
  */
 
 /**
  * @openapi
- * /course:
+ * /recomm:
  *   post:
- *     summary: Create a new User's Opted Course
- *     tags: [Course]
+ *     summary: Create a new Quiz Entry
+ *     tags: [Quiz]
  *     parameters:
  *       - in: path
  *         name: id
@@ -57,33 +59,33 @@ const {getPaginated, pagination} = require("../util/util");
  *       500:
  *         description: Some server error
  */
-// TODO()
 exports.createItem = async (req, res, next) => {
     try {
-        const reqBody = req.body
-        let data = {...reqBody}
-        const courseModel = new Model.Courses();
-        const {validationRule, customMessage} = await courseModel.validationRequest(
-            "create"
-        );
-        const allCoursesData = await Model.Courses.findAll({
-            where: {userId: userId},
-        })
-        // If already existing data, it shall not re-add same data.
-        const isExist = !!allCoursesData.find((value) => data.course.toString() === value.dataValues.course.toString());
-        if (allCoursesData.length > 0 && isExist) {
-            return res.status(400).json({status: "ERROR", message: "Course already existing!"});
-        }
-        const validation = new Validator(data, validationRule, customMessage);
-        if (validation.fails()) {
-            return next(
-                new ValidationError(
-                    JSON.parse(JSON.stringify(validation.errors)).errors
-                )
-            );
-        }
-        let response = await Model.Courses.create(data);
-        return res.status(200).json({data: response, message: "Course created successfully"});
+        // const userId = req.params.id;
+        // const reqBody = req.body
+        // let data = {...reqBody, userId}
+        // const courseModel = new Model.RecommCourses();
+        // const {validationRule, customMessage} = await courseModel.validationRequest(
+        //     "create"
+        // );
+        // const allCoursesData = await Model.RecommCourses.findAll({
+        //     where: {userId: userId},
+        // })
+        // // If already existing data, it shall not re-add same data.
+        // const isExist = !!allCoursesData.find((value) => data.userId.toString() === value.dataValues.userId.toString() && data.courseId.toString() === value.dataValues.courseId.toString());
+        // if (allCoursesData.length > 0 && isExist) {
+        //     return res.status(200).json({status: "ERROR", message: "User with that Course already existing!"});
+        // }
+        // const validation = new Validator(data, validationRule, customMessage);
+        // if (validation.fails()) {
+        //     return next(
+        //         new ValidationError(
+        //             JSON.parse(JSON.stringify(validation.errors)).errors
+        //         )
+        //     );
+        // }
+        // let response = await Model.RecommCourses.create(data);
+        // return res.status(200).json({status: "SUCCESS", data: response, message: "Course opted successfully"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -91,10 +93,10 @@ exports.createItem = async (req, res, next) => {
 
 /**
  * @openapi
- * /course:
+ * /quiz:
  *   get:
- *     summary: Returns the list of all the Opted Courses
- *     tags: [Course]
+ *     summary: Returns the list of all the Quiz
+ *     tags: [Quiz]
  *     security:
  *       - jwt: []
  *     parameters:
@@ -131,13 +133,19 @@ exports.listItems = async (req, res, next) => {
         const {page, size, search, sortBy, sortKey} = req.query;
         const {limit, offset} = await getPaginated(size, page);
         const order = [[sortKey ? sortKey : "id", sortBy ? sortBy : "DESC"]];
-        const data = await Model.Courses.findAndCountAll({
+        const data = await Model.Questions.findAndCountAll({
             limit: limit,
             offset: offset,
             order: order,
+            attributes: ['id', 'question_type', 'question'],
+            include: [{
+                model: Model.Answers,
+                required: false,
+                attributes: ['id', 'question_id', 'question_type', 'option']
+            }],
         });
-        let response = await pagination(data, page, limit);
-        return res.status(200).json({data: response, message: "All courses listed"});
+        let paginatedResponse = await pagination(data, page, limit);
+        return res.status(200).json({status: "SUCCESS", data: paginatedResponse, message: "All quiz data listed"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -145,21 +153,28 @@ exports.listItems = async (req, res, next) => {
 
 /**
  * @openapi
- * /course/:
+ * /quiz/{id}:
  *   get:
- *     summary: Get the courses by name
- *     tags: [Course]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
+ *     summary: Get the Quiz by question ID
+ *     tags: [Quiz]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The question id
+ *       - in: path
+ *         name: isCorrect
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: isCorrect Option
  *     security:
  *       - jwt: []
  *     responses:
  *       200:
- *         description: The user was successfully created
+ *         description: The course  was successfully listed
  *       400:
  *         description: validation error
  *       401:
@@ -171,17 +186,31 @@ exports.listItems = async (req, res, next) => {
  */
 exports.getItem = async (req, res, next) => {
     try {
-        const data = req.body;
-        const courseModel = new Model.Courses();
-        const courseResponse = await Model.Courses.findAll({
-            where: {course: data.course}
-        })
-        if (!courseResponse) {
-            return res
-                .status(404)
-                .json({status: "ERROR", message: "Course not found."});
+        const id = req.params.id;
+        const {isCorrect} = req.query;
+        if (isCorrect) {
+            const courseResponse = await Model.Answers.findAll({
+                    where: {id: id, isCorrect: isCorrect},
+                attributes: ['id', 'question_id', 'question_type', 'option']
+            })
+            if (!courseResponse) {
+                return res
+                    .status(404)
+                    .json({status: "ERROR", message: "Option not found."});
+            }
+            return res.status(200).json({status: "SUCCESS", data: courseResponse, message: "Option Found!"});
+        } else {
+            const courseResponse = await Model.Answers.findAll({
+                where: {question_id: id},
+                attributes: ['id', 'question_id', 'question_type', 'option']
+            })
+            if (!courseResponse) {
+                return res
+                    .status(404)
+                    .json({status: "ERROR", message: "Course not found."});
+            }
+            return res.status(200).json({status: "SUCCESS", data: courseResponse, message: "Course Found!"});
         }
-        return res.status(200).json({data: courseResponse, message: "Course Found!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -189,10 +218,10 @@ exports.getItem = async (req, res, next) => {
 
 /**
  * @swagger
- * /course/{id}:
+ * /quiz/{id}:
  *  put:
- *    summary: Update the course by the userid
- *    tags: [Course]
+ *    summary: Update the RecommCourses by the userid
+ *    tags: [Quiz]
  *    parameters:
  *      - in: path
  *        name: id
@@ -213,10 +242,11 @@ exports.getItem = async (req, res, next) => {
  *        description: Some error happened
  */
 
+// TODO()
 exports.updateItem = async (req, res, next) => {
     try {
-        const courseName = req.body
-        const optedCourses = new Model.Courses();
+        const id = req.params.id;
+        const optedCourses = new Model.OptedCourses();
         let {validationRule, customMessage} = await optedCourses.validationRequest(
             "update"
         );
@@ -229,9 +259,9 @@ exports.updateItem = async (req, res, next) => {
             );
         }
 
-        const isCourse = await Model.Courses.findOne({
+        const isCourse = await Model.OptedCourses.findOne({
             where: {
-                course: courseName,
+                userId: id,
             },
         });
         if (!isCourse) {
@@ -240,7 +270,7 @@ exports.updateItem = async (req, res, next) => {
         let updatedData = await optedCourses.prepareUpdateData(data, isCourse);
         console.log("updatedData: ", updatedData)
         const userUpdate = await isCourse.update(updatedData);
-        return res.status(200).json({data: userUpdate, message: "Saved Changes!"});
+        return res.status(200).json({status: "SUCCESS", data: userUpdate, message: "Saved Changes!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -248,10 +278,10 @@ exports.updateItem = async (req, res, next) => {
 
 /**
  * @swagger
- * /course/{id}:
+ * /quiz/{id}:
  *   delete:
  *     summary: Remove the user by id
- *     tags: [Course]
+ *     tags: [Quiz]
  *     parameters:
  *       - in: path
  *         name: id
@@ -274,7 +304,7 @@ exports.updateItem = async (req, res, next) => {
 exports.deleteItem = async (req, res, next) => {
     try {
         const id = req.params.id;
-        const course = await Model.OptedCourses.findOne({
+        const course = await Model.RecommCourses.findOne({
             where: {
                 courseId: id,
             },
@@ -285,7 +315,7 @@ exports.deleteItem = async (req, res, next) => {
                 .json({status: "ERROR", message: "Course not found."});
         }
         await course.destroy();
-        return res.status(200).json({message: "Item deleted."});
+        return res.status(200).json({status: "SUCCESS", message: "Removed Recommended Course successfully!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }

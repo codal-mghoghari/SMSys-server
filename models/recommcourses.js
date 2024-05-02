@@ -1,9 +1,9 @@
 "use strict";
 const { Model } = require("sequelize");
-const {updateData} = require("../util/CommonUtil");
+const {updateData} = require("../util/util");
 
 module.exports = (sequelize, DataTypes) => {
-    class OptedCourses extends Model {
+    class RecommCourses extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            OptedCourses.belongsTo(models.Courses, {
+            RecommCourses.belongsTo(models.Courses, {
                 through: 'Courses',
                 foreignKey: 'courseId',
                 onDelete: 'CASCADE',
@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
                             userId: "required",
                         },
                         customMessage: {
-                            "required.optedCourseID": "optedCourseID is required",
+                            "required.courseId": "optedCourseID is required",
                             "required.userId": "userID is required",
                         },
                     };
@@ -51,7 +51,7 @@ module.exports = (sequelize, DataTypes) => {
                             userId: "required",
                         },
                         customMessage: {
-                            "required.optedCourseID": "optedCourseID is required",
+                            "required.courseId": "optedCourseID is required",
                             "required.userId": "userID is required",
                         },
                     };
@@ -71,7 +71,7 @@ module.exports = (sequelize, DataTypes) => {
         };
     }
 
-    OptedCourses.init(
+    RecommCourses.init(
         {
             id: {
                 type: DataTypes.INTEGER,
@@ -96,9 +96,9 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
             sequelize,
-            modelName: "OptedCourses",
+            modelName: "RecommCourses",
         }
     );
 
-    return OptedCourses;
+    return RecommCourses;
 };

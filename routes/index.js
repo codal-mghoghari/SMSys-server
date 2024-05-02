@@ -21,6 +21,8 @@ module.exports = (app) => {
     app.post("/api/signup", AuthController.signup);
 
 
+    // Default Routes
+
     app.get("/api/*/:id", [verifyJWT, verifyAdmin], async (req, res, next) => {
         try {
             const url = req.url.split("/");
@@ -38,8 +40,9 @@ module.exports = (app) => {
     app.get("/api/*", [verifyJWT], async (req, res, next) => {
         try {
             const url = req.url.split("/");
+            const cName = url[2].split("?") ? url[2].split("?")[0] : url
             const rootPath = path.join(__dirname, "../");
-            const controllerName = url[2] + "Controller.js";
+            const controllerName = cName + "Controller.js";
             const controllerObject = require(rootPath +
                 "controllers/" +
                 controllerName);
@@ -47,7 +50,6 @@ module.exports = (app) => {
         } catch (err) {
             res.status(500).json({error: err});
         }
-
     });
 
     app.post("/api/*/:id", [verifyJWT], async (req, res, next) => {
@@ -62,7 +64,6 @@ module.exports = (app) => {
         } catch (err) {
             res.status(500).json({error: err});
         }
-
     });
 
     app.post("/api/*", [verifyJWT], async (req, res, next) => {
@@ -77,7 +78,6 @@ module.exports = (app) => {
         } catch (err) {
             res.status(500).json({error: err});
         }
-
     });
 
     app.put("/api/*/:id", [verifyJWT], async (req, res, next) => {
@@ -92,7 +92,6 @@ module.exports = (app) => {
         } catch (err) {
             res.status(500).json({error: err});
         }
-
     });
 
     app.delete("/api/*/:id", [verifyJWT], async (req, res, next) => {
@@ -107,6 +106,5 @@ module.exports = (app) => {
         } catch (err) {
             res.status(500).json({error: err});
         }
-
     });
 };

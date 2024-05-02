@@ -1,9 +1,9 @@
 "use strict";
-const { Model, Sequelize} = require("sequelize");
+const {Model, Sequelize} = require("sequelize");
 const {updateData} = require("../util/util");
 
 module.exports = (sequelize, DataTypes) => {
-    class Courses extends Model {
+    class Answers extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
@@ -11,33 +11,40 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            Courses.belongsToMany(models.Users, {
-                through: 'OptedCourses',
-                as: 'user',
-                foreignKey: 'courseId',
-                onDelete: 'CASCADE',
+            Answers.belongsTo(models.Questions, {
+                foreignKey: 'question_id',
+                onDelete: 'CASCADE'
             })
         }
+
         validationRequest = async (action) => {
             let rules;
             switch (action) {
                 case "create":
                     rules = {
                         validationRule: {
-                            course: "required",
+                            question_type: "required",
+                            option: "required",
+                            isCorrect: "required",
                         },
                         customMessage: {
-                            "required.course": "course is required",
+                            "required.question_type": "question_type is required",
+                            "required.option": "option is required",
+                            "required.isCorrect": "isCorrect is required",
                         },
                     };
                     break;
                 case "update":
                     rules = {
                         validationRule: {
-                            courses: "required",
+                            question_type: "required",
+                            option: "required",
+                            isCorrect: "required",
                         },
                         customMessage: {
-                            "required.course": "course is required",
+                            "required.question_type": "question_type is required",
+                            "required.option": "option is required",
+                            "required.isCorrect": "isCorrect is required",
                         },
                     };
                     break;
@@ -56,7 +63,7 @@ module.exports = (sequelize, DataTypes) => {
         };
     }
 
-    Courses.init(
+    Answers.init(
         {
             id: {
                 type: DataTypes.UUID,
@@ -64,12 +71,16 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: DataTypes.UUIDV4,
             },
-            course: DataTypes.STRING,
+            question_type: {
+                type: DataTypes.STRING,
+            },
+            option: DataTypes.STRING,
+            isCorrect: DataTypes.INTEGER,
         },
         {
             sequelize,
-            modelName: "Courses",
+            modelName: "Answers",
         }
     );
-    return Courses;
+    return Answers;
 };

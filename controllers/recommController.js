@@ -4,34 +4,35 @@ const ValidationError = require("../handler/error/ValidationError");
 const bcrypt = require("bcrypt");
 require("dotenv/config");
 const {getPaginated, pagination} = require("../util/util");
+
 /**
  * @swagger
  * tags:
- *   name: Course
- *   description: The Course managing API
+ *   name: RecommCourses
+ *   description: The Recommended Course managing API
  */
 
 /**
  * @openapi
  * components:
  *   schemas:
- *     Course:
+ *     RecommCourses:
  *       type: object
  *       properties:
- *         id:
- *           type: UUID
- *           description: The course uuid
- *         course:
- *           type: string
- *           description: The course name
+ *         courseId:
+ *           type: integer
+ *           description: The course id
+ *         userId:
+ *           type: integer
+ *           description: The user id
  */
 
 /**
  * @openapi
- * /course:
+ * /recomm:
  *   post:
- *     summary: Create a new User's Opted Course
- *     tags: [Course]
+ *     summary: Create a new RecommCourses Entry
+ *     tags: [RecommCourses]
  *     parameters:
  *       - in: path
  *         name: id
@@ -57,22 +58,22 @@ const {getPaginated, pagination} = require("../util/util");
  *       500:
  *         description: Some server error
  */
-// TODO()
 exports.createItem = async (req, res, next) => {
     try {
+        const userId = req.params.id;
         const reqBody = req.body
-        let data = {...reqBody}
-        const courseModel = new Model.Courses();
+        let data = {...reqBody, userId}
+        const courseModel = new Model.RecommCourses();
         const {validationRule, customMessage} = await courseModel.validationRequest(
             "create"
         );
-        const allCoursesData = await Model.Courses.findAll({
+        const allCoursesData = await Model.RecommCourses.findAll({
             where: {userId: userId},
         })
         // If already existing data, it shall not re-add same data.
-        const isExist = !!allCoursesData.find((value) => data.course.toString() === value.dataValues.course.toString());
+        const isExist = !!allCoursesData.find((value) => data.userId.toString() === value.dataValues.userId.toString() && data.courseId.toString() === value.dataValues.courseId.toString());
         if (allCoursesData.length > 0 && isExist) {
-            return res.status(400).json({status: "ERROR", message: "Course already existing!"});
+            return res.status(200).json({status: "ERROR", message: "User with that Course already existing!"});
         }
         const validation = new Validator(data, validationRule, customMessage);
         if (validation.fails()) {
@@ -82,8 +83,8 @@ exports.createItem = async (req, res, next) => {
                 )
             );
         }
-        let response = await Model.Courses.create(data);
-        return res.status(200).json({data: response, message: "Course created successfully"});
+        let response = await Model.RecommCourses.create(data);
+        return res.status(200).json({status: "SUCCESS", data: response, message: "Course opted successfully"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -91,10 +92,10 @@ exports.createItem = async (req, res, next) => {
 
 /**
  * @openapi
- * /course:
+ * /recomm:
  *   get:
- *     summary: Returns the list of all the Opted Courses
- *     tags: [Course]
+ *     summary: Returns the list of all the RecommCourses
+ *     tags: [RecommCourses]
  *     security:
  *       - jwt: []
  *     parameters:
@@ -126,18 +127,26 @@ exports.createItem = async (req, res, next) => {
  *         description: Some server error
  *
  */
+//TODO
 exports.listItems = async (req, res, next) => {
     try {
         const {page, size, search, sortBy, sortKey} = req.query;
         const {limit, offset} = await getPaginated(size, page);
         const order = [[sortKey ? sortKey : "id", sortBy ? sortBy : "DESC"]];
-        const data = await Model.Courses.findAndCountAll({
+        const data = await Model.OptedCourses.findAndCountAll({
             limit: limit,
             offset: offset,
             order: order,
+            include: [{
+                model: Model.Courses,
+                required: false,
+                attributes: ['course', 'id']
+            }],
+            attributes: []
         });
-        let response = await pagination(data, page, limit);
-        return res.status(200).json({data: response, message: "All courses listed"});
+        let paginatedResponse = await pagination(data, page, limit);
+        let response = paginatedResponse.results.map(value => value.Course)
+        return res.status(200).json({status: "SUCCESS", data: response, message: "All courses listed"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -145,16 +154,17 @@ exports.listItems = async (req, res, next) => {
 
 /**
  * @openapi
- * /course/:
+ * /recomm/{id}:
  *   get:
- *     summary: Get the courses by name
- *     tags: [Course]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/User'
+ *     summary: Get the courses by user ID
+ *     tags: [RecommCourses]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The user id
  *     security:
  *       - jwt: []
  *     responses:
@@ -171,17 +181,35 @@ exports.listItems = async (req, res, next) => {
  */
 exports.getItem = async (req, res, next) => {
     try {
-        const data = req.body;
-        const courseModel = new Model.Courses();
-        const courseResponse = await Model.Courses.findAll({
-            where: {course: data.course}
+        const id = req.params.id;
+        const courseIds = await Model.RecommCourses.findAll({
+            raw: true,
+            where: {userId: id},
+        }).then(response => {
+            return response.map(value => value.courseId)
+        })
+        if (courseIds.length === 0) {
+            return res
+                .status(404)
+                .json({status: "ERROR", message: "Opted Courses not found."});
+        }
+        const courseResponse = await Model.RecommCourses.findAll({
+            where: {userId: id},
+            attributes: [],
+            include: [{
+                model: Model.Courses,
+                required: false,
+                attributes: ['course', 'id'],
+                where: {id: courseIds},
+            }]
         })
         if (!courseResponse) {
             return res
                 .status(404)
                 .json({status: "ERROR", message: "Course not found."});
         }
-        return res.status(200).json({data: courseResponse, message: "Course Found!"});
+        let coursesList = courseResponse.map(value => value.dataValues.Course)
+        return res.status(200).json({status: "SUCCESS", data: coursesList, message: "Course Found!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -189,10 +217,10 @@ exports.getItem = async (req, res, next) => {
 
 /**
  * @swagger
- * /course/{id}:
+ * /recomm/{id}:
  *  put:
- *    summary: Update the course by the userid
- *    tags: [Course]
+ *    summary: Update the RecommCourses by the userid
+ *    tags: [RecommCourses]
  *    parameters:
  *      - in: path
  *        name: id
@@ -213,10 +241,11 @@ exports.getItem = async (req, res, next) => {
  *        description: Some error happened
  */
 
+// TODO()
 exports.updateItem = async (req, res, next) => {
     try {
-        const courseName = req.body
-        const optedCourses = new Model.Courses();
+        const id = req.params.id;
+        const optedCourses = new Model.OptedCourses();
         let {validationRule, customMessage} = await optedCourses.validationRequest(
             "update"
         );
@@ -229,9 +258,9 @@ exports.updateItem = async (req, res, next) => {
             );
         }
 
-        const isCourse = await Model.Courses.findOne({
+        const isCourse = await Model.OptedCourses.findOne({
             where: {
-                course: courseName,
+                userId: id,
             },
         });
         if (!isCourse) {
@@ -240,7 +269,7 @@ exports.updateItem = async (req, res, next) => {
         let updatedData = await optedCourses.prepareUpdateData(data, isCourse);
         console.log("updatedData: ", updatedData)
         const userUpdate = await isCourse.update(updatedData);
-        return res.status(200).json({data: userUpdate, message: "Saved Changes!"});
+        return res.status(200).json({status: "SUCCESS", data: userUpdate, message: "Saved Changes!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }
@@ -248,10 +277,10 @@ exports.updateItem = async (req, res, next) => {
 
 /**
  * @swagger
- * /course/{id}:
+ * /recomm/{id}:
  *   delete:
  *     summary: Remove the user by id
- *     tags: [Course]
+ *     tags: [RecommCourses]
  *     parameters:
  *       - in: path
  *         name: id
@@ -274,7 +303,7 @@ exports.updateItem = async (req, res, next) => {
 exports.deleteItem = async (req, res, next) => {
     try {
         const id = req.params.id;
-        const course = await Model.OptedCourses.findOne({
+        const course = await Model.RecommCourses.findOne({
             where: {
                 courseId: id,
             },
@@ -285,7 +314,7 @@ exports.deleteItem = async (req, res, next) => {
                 .json({status: "ERROR", message: "Course not found."});
         }
         await course.destroy();
-        return res.status(200).json({message: "Item deleted."});
+        return res.status(200).json({status: "SUCCESS", message: "Removed Recommended Course successfully!"});
     } catch (e) {
         return res.status(500).json({status: "ERROR", message: e.message});
     }

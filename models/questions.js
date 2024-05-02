@@ -1,9 +1,9 @@
 "use strict";
-const { Model, Sequelize} = require("sequelize");
+const {Model, Sequelize} = require("sequelize");
 const {updateData} = require("../util/util");
 
 module.exports = (sequelize, DataTypes) => {
-    class Courses extends Model {
+    class Questions extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
@@ -11,13 +11,12 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            Courses.belongsToMany(models.Users, {
-                through: 'OptedCourses',
-                as: 'user',
-                foreignKey: 'courseId',
-                onDelete: 'CASCADE',
+            Questions.hasMany(models.Answers, {
+                foreignKey: 'question_id',
+                onDelete: 'CASCADE'
             })
         }
+
         validationRequest = async (action) => {
             let rules;
             switch (action) {
@@ -56,7 +55,7 @@ module.exports = (sequelize, DataTypes) => {
         };
     }
 
-    Courses.init(
+    Questions.init(
         {
             id: {
                 type: DataTypes.UUID,
@@ -64,12 +63,15 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 defaultValue: DataTypes.UUIDV4,
             },
-            course: DataTypes.STRING,
+            question_type: {
+                type: DataTypes.STRING
+            },
+            question: DataTypes.STRING,
         },
         {
             sequelize,
-            modelName: "Courses",
+            modelName: "Questions",
         }
     );
-    return Courses;
+    return Questions;
 };
